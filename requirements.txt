@@ -1,0 +1,29 @@
+# Web application and validation
+fastapi>=0.111,<1
+uvicorn[standard]
+pydantic[email]>=2.7,<3
+pydantic-settings>=2.2,<3
+python-dotenv
+python-multipart
+slowapi
+
+# Persistence, storage, and service clients
+redis[hiredis]
+boto3
+docker
+httpx
+requests
+
+# Authentication and security
+bcrypt
+google-auth
+PyJWT
+
+# AI and media metadata
+google-genai
+google-cloud-vision
+google-cloud-videointelligence
+aiofiles
+filetype
+Pillow
+pillow-avif-plugin

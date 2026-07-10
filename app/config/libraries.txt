@@ -1,0 +1,1236 @@
+**IMPORTANT: YOU ARE GENERATING CODE FOR A VERTEX AI ENVIRONMENT.**
+- **CLIENT INITIALIZATION**: The client is initialized automatically using environment variables. Use `client = genai.Client()`. Do not configure it with an API key.
+- **FILE HANDLING**: You **MUST NOT** use `client.files.upload()`. For any file-based operation (analysis, transcription, image-to-video), you must first have a local path to the file (e.g., after downloading it from S3), read its contents into bytes, and pass it to the model using `types.Part.from_bytes(data=file_bytes, mime_type=...)`.
+- **TEXT-TO-SPEECH**: Use OpenAI's TTS API (`client = OpenAI()`) instead of Gemini TTS for text-to-speech generation. The OpenAI client uses the `OPENAI_API_KEY` environment variable automatically.
+
+**IMPORTANT: `GENAI.CONFIGURE()` AND `GENAI.INIT()` ARE DEPRECATED IN THE NEW PACKAGE. DO NOT USE THEM.**
+**THE NEW PACKAGE IS GOOGLE.GENAI, NOT GOOGLE.GENERATIVEAI**
+AttributeError: module 'google.genai' has no attribute 'init'
+
+=== CRITICAL ERROR PREVENTION GUIDELINES ===
+
+**BEFORE WRITING ANY CODE, FOLLOW THESE MANDATORY RULES TO PREVENT COMMON FAILURES:**
+
+1. **FFmpeg Filter Syntax Rules (CRITICAL for video/image processing)**:
+   - NEVER use mathematical expressions like `w/40`, `h/20`, `text_w`, `text_h` directly in FFmpeg filters
+   - ALWAYS use proper FFmpeg syntax: `tw` (text width), `th` (text height), `w` (width), `h` (height)
+   - For proportional sizing, use integer calculations BEFORE the FFmpeg command
+   - **WRONG**: `fontsize=h/20`, `x=w-text_w-w/40`, `boxborderw=w/40`
+   - **CORRECT**: Calculate values first, then use integers:
+     ```python
+     # Calculate font size as integer first
+     font_size = max(16, int(image_height / 20))
+     padding = max(10, int(image_width / 40))
+     
+     # Use calculated integers in FFmpeg filter
+     drawtext_filter = (
+         f"drawtext=fontfile='{font_path}':"
+         f"text='{escaped_text}':"
+         f"fontcolor=white:"
+         f"fontsize={font_size}:"
+         f"box=1:boxcolor=black@0.5:"
+         f"boxborderw={padding}:"
+         f"x=w-tw-{padding}:"
+         f"y=h-th-{padding}"
+     )
+     ```
+
+2. **Text Escaping for FFmpeg (CRITICAL)**:
+   - Always escape special characters in text for FFmpeg filters
+   - Use proper escaping for colons, quotes, backslashes
+   - **CORRECT escaping example**:
+     ```python
+     import re
+     def escape_text_for_ffmpeg(text):
+         # Escape special FFmpeg characters
+         text = text.replace('\\', '\\\\')  # Escape backslashes first
+         text = text.replace(':', '\\:')    # Escape colons
+         text = text.replace("'", "\\'")    # Escape single quotes
+         text = re.sub(r'[^\w\s\-_]', '', text)  # Remove other special chars
+         return text
+     
+     escaped_text = escape_text_for_ffmpeg(watermark_text)
+     ```
+
+3. **File Path and S3 Key Handling (CRITICAL)**:
+   - NEVER hardcode specific S3 keys from conversation history
+   - ALWAYS use the input_files list provided in the execution context
+   - **WRONG**: `input_s3_key = "chat_data/113742167647467350420/..."`
+   - **CORRECT**: Parse from provided input context:
+     ```python
+     # Get input files from the execution context
+     input_files = []  # This will be populated by the system
+     if input_files:
+         input_s3_key = input_files[0]['s3_key']  # Use first input file
+         local_input_path = download_from_s3(input_s3_key)
+     else:
+         # Handle case with no input files
+         print("ERROR: No input files provided.", file=sys.stderr)
+         raise ValueError("No input files to process.")
+     ```
+
+4. **Robust Error Handling (MANDATORY)**:
+   - ALWAYS wrap FFmpeg calls in try-catch blocks
+   - ALWAYS check if output files exist and have content after processing
+   - ALWAYS provide meaningful error messages
+   - **CORRECT error handling**:
+     ```python
+     try:
+         result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, check=False)
+         if result.returncode != 0:
+             print(f"ERROR: FFmpeg failed with code {result.returncode}", file=sys.stderr)
+             print(f"FFmpeg stderr: {result.stderr}", file=sys.stderr)
+             raise RuntimeError(f"FFmpeg processing failed: {result.stderr}")
+         
+         if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+             raise FileNotFoundError("Output file was not created or is empty")
+             
+     except Exception as e:
+         print(f"ERROR: Processing failed: {e}", file=sys.stderr)
+         # Continue with error handling, don't just fail silently
+     ```
+
+5. **Environment Variable Validation (MANDATORY)**:
+   - ALWAYS validate required environment variables exist
+   - **CORRECT validation**:
+     ```python
+     def get_env_var(name):
+         value = os.environ.get(name)
+         if not value:
+             print(f"ERROR: Environment variable {name} not set.", file=sys.stderr)
+             sys.exit(1)
+         return value
+     
+     EXECUTION_ID = get_env_var("EXECUTION_ID")
+     S3_BUCKET_NAME = get_env_var("S3_BUCKET_NAME")
+     ```
+
+6. **Font Handling (CRITICAL)**:
+   - ALWAYS check if font files exist before using them
+   - ALWAYS provide fallback fonts
+   - **CORRECT font handling**:
+     ```python
+     font_path = "/usr/share/fonts/truetype/open-sans/OpenSans-Bold.ttf"
+     if not os.path.exists(font_path):
+         # Try fallback fonts in order
+         fallback_fonts = [
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+         ]
+         for fallback in fallback_fonts:
+             if os.path.exists(fallback):
+                 font_path = fallback
+                 break
+         else:
+             print("WARNING: No suitable font found, using system default", file=sys.stderr)
+             font_path = None  # Use system default
+     ```
+
+7. **File Operations (MANDATORY)**:
+   - ALWAYS verify downloads completed successfully
+   - ALWAYS check file sizes after creation
+   - ALWAYS clean up temporary files
+   - **CORRECT file operations**:
+     ```python
+     # Verify download
+     local_file = download_from_s3(s3_key)
+     if not local_file or not os.path.exists(local_file):
+         raise FileNotFoundError(f"Failed to download {s3_key}")
+     
+     # Verify file has content
+     if os.path.getsize(local_file) == 0:
+         raise ValueError(f"Downloaded file {local_file} is empty")
+     
+     # Verify output after processing
+     if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+         final_output_paths.append(output_path)
+     else:
+         raise IOError("Failed to create valid output file")
+     ```
+
+8. **Debug Logging (MANDATORY)**:
+   - ALWAYS add debug prints to stderr for troubleshooting
+   - Log all major steps, file operations, and command executions
+   - **CORRECT debug logging**:
+     ```python
+     print(f"DEBUG: Processing file {input_path}", file=sys.stderr)
+     print(f"DEBUG: Running command: {' '.join(command)}", file=sys.stderr)
+     print(f"DEBUG: Output saved to {output_path}", file=sys.stderr)
+     ```
+
+**REMEMBER: These rules prevent 90% of execution failures. Always follow them!**
+
+=== WATERMARKING IMAGES/VIDEOS - SPECIFIC GUIDELINES ===
+
+**For adding text watermarks to images or videos, use this PROVEN approach:**
+
+1. **For Images - Use Pillow (Recommended)**:
+   ```python
+   from PIL import Image, ImageDraw, ImageFont
+   
+   # Load image
+   with Image.open(input_path).convert("RGBA") as base_image:
+       # Calculate font size relative to image size
+       font_size = max(16, int(base_image.width / 35))
+       
+       # Load font with fallback
+       try:
+           font = ImageFont.truetype("/usr/share/fonts/truetype/open-sans/OpenSans-Bold.ttf", font_size)
+       except:
+           font = ImageFont.load_default()
+       
+       # Create watermark
+       draw = ImageDraw.Draw(base_image)
+       text_bbox = draw.textbbox((0, 0), watermark_text, font=font)
+       text_width = text_bbox[2] - text_bbox[0]
+       text_height = text_bbox[3] - text_bbox[1]
+       
+       # Position at bottom-right with padding
+       padding = 15
+       x = base_image.width - text_width - padding
+       y = base_image.height - text_height - padding
+       
+       # Draw with background
+       draw.rectangle([(x-5, y-5), (x+text_width+5, y+text_height+5)], fill=(0, 0, 0, 128))
+       draw.text((x, y), watermark_text, font=font, fill=(255, 255, 255, 220))
+       
+       # Save
+       base_image.convert("RGB").save(output_path, "PNG")
+   ```
+
+2. **For Videos - Use FFmpeg with Proper Syntax**:
+   ```python
+   # Calculate values BEFORE FFmpeg command
+   # Get video dimensions first
+   probe_cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", input_path]
+   probe_result = subprocess.run(probe_cmd, capture_output=True, text=True)
+   video_info = json.loads(probe_result.stdout)
+   
+   width = height = 720  # Default fallback
+   for stream in video_info.get('streams', []):
+       if stream.get('codec_type') == 'video':
+           width = stream.get('width', 720)
+           height = stream.get('height', 720)
+           break
+   
+   # Calculate positioning values as integers
+   font_size = max(16, int(height / 25))
+   padding = max(10, int(width / 50))
+   
+   # Escape text properly
+   escaped_text = watermark_text.replace(':', '\\:').replace("'", "\\'")
+   
+   # Build FFmpeg command with calculated integers
+   ffmpeg_cmd = [
+       "ffmpeg", "-i", input_path,
+       "-vf", f"drawtext=fontfile=/usr/share/fonts/truetype/open-sans/OpenSans-Bold.ttf:"
+              f"text='{escaped_text}':"
+              f"fontsize={font_size}:"
+              f"fontcolor=white:"
+              f"box=1:boxcolor=black@0.5:"
+              f"boxborderw={padding}:"
+              f"x=w-tw-{padding}:"
+              f"y=h-th-{padding}",
+       "-c:a", "copy", "-y", output_path
+   ]
+   ```
+
+**KEY POINT**: The error logs showed FFmpeg failed because expressions like `w/40` and `text_w` were used incorrectly. Always calculate numeric values first, then use them as integers in the FFmpeg filter.
+
+=== Available Installed Packages ===
+
+1. Core Image/Video/Audio Processing:
+   - Pillow - Image processing (use directly)
+   - opencv-python-headless - Computer vision
+   - imageio[ffmpeg] - Image I/O
+   - numpy - Numerical computing
+   - google-genai - Google AI SDK (for Gemini Image/Veo Video)
+   - openai - OpenAI API client (for TTS, transcription)
+
+2. **Gemini Content Generation (Text, Transcription, Analysis)**: For general text generation, file analysis, and transcription using Google's Gemini models.
+   
+
+   
+   * **Available Models**:
+    - `gemini-2.5-pro` - Audio, images, videos, text → Text (Enhanced reasoning, multimodal)
+    - `imagen-4.0-generate-preview-06-06` - Text → Images (High-quality image generation)
+    - `veo-2.0-generate-001` - Text, images → Videos (High-quality video generation)
+    - `lyria-realtime-exp` - Text → Music (Real-time instrumental music generation)
+    - `whisper-1` - Audio → Text (Speech-to-text transcription)
+    - `gpt-4o-mini-tts` - Text → Audio (OpenAI TTS with advanced control)
+    - `tts-1` - Text → Audio (OpenAI TTS, lower latency)
+    - `tts-1-hd` - Text → Audio (OpenAI TTS, higher quality)
+    
+     
+   * Required Python Library: `google-genai`
+   * Required Imports: `from google import genai`, `from google.genai import types`, `import os`, `import sys`
+
+    **IMPORTANT: `GENAI.CONFIGURE()` AND `GENAI.INIT()` ARE DEPRECATED IN THIS NEW PACKAGE. DO NOT USE THEM.**
+   * **Client Initialization (Vertex AI)**:
+     ```python
+     from google import genai
+     # The client automatically uses Vertex AI config from environment variables.
+     client = genai.Client()
+     ```
+   * **Basic Text Generation**:
+     ```python
+     # Step 1: Initialize client
+     from google import genai
+     from google.genai import types
+     client = genai.Client()
+     
+     # Step 2: Generate content with proper exception handling and response validation
+     try:
+         response = client.models.generate_content(
+             model='gemini-2.5-pro',
+             contents='Your prompt here',
+             config=types.GenerateContentConfig(
+                 temperature=0.7
+             )
+         )
+         
+         # CRITICAL: Validate the response before accessing the 'text' attribute.
+         # The 'text' attribute can be None if the response was blocked for safety,
+         # or did not contain a text part.
+         if not response.candidates or not response.text:
+             # Log details if available for easier debugging.
+             print(f"ERROR: Gemini response is empty or was blocked. Full response: {response}", file=sys.stderr)
+             raise ValueError("Gemini API returned an invalid response.")
+
+         result_text = response.text.strip()
+         print(f"DEBUG: Gemini response: {result_text}", file=sys.stderr)
+     except Exception as e:
+         print(f"ERROR: Gemini content generation failed: {e}", file=sys.stderr)
+         # Handle the error appropriately
+     ```
+   * **File Analysis (Audio, Video, etc. using Inline Bytes)**:
+     ```python
+     # Step 1: Initialize client
+     import sys
+     from google import genai
+     from google.genai import types
+     
+     client = genai.Client()
+     
+     try:
+         # Step 2: Get the local file path (e.g., after downloading from S3)
+         local_media_path = "/path/to/downloaded/media.mp4"
+         print(f"DEBUG: Reading file {local_media_path} for analysis...", file=sys.stderr)
+
+         # Step 3: Read the file into bytes
+         with open(local_media_path, "rb") as f:
+             media_bytes = f.read()
+
+         # Step 4: Generate content using the inline bytes
+         response = client.models.generate_content(
+             model='gemini-2.5-pro',
+             contents=[
+                 "Generate a transcript of the speech in this video.",
+                 types.Part.from_bytes(
+                     data=media_bytes,
+                     mime_type='video/mp4' # IMPORTANT: Provide the correct MIME type
+                 )
+             ]
+         )
+
+         # CRITICAL: Validate the response before accessing the 'text' attribute.
+         if not response.candidates or not response.text:
+             print(f"ERROR: Gemini response is empty or was blocked. Full response: {response}", file=sys.stderr)
+             raise ValueError("Gemini API returned an invalid response for transcription.")
+
+         transcription = response.text.strip()
+         print(f"DEBUG: Transcription: {transcription}", file=sys.stderr)
+
+     except FileNotFoundError:
+         print(f"ERROR: Local media file not found at {local_media_path}", file=sys.stderr)
+     except Exception as e:
+         print(f"ERROR: Media transcription failed: {e}", file=sys.stderr)
+     ```
+
+   * **Inline Audio Data (For smaller files <20MB)**:
+     ```python
+     # Step 1: Initialize client
+     from google import genai
+     from google.genai import types
+     client = genai.Client()
+     
+     try:
+         # Step 2: Read audio file as bytes
+         with open('/path/to/audio.mp3', 'rb') as f:
+             audio_bytes = f.read()
+         
+         # Step 3: Generate transcript with inline data
+         response = client.models.generate_content(
+             model='gemini-2.5-pro',
+             contents=[
+                 'Transcribe this audio clip',
+                 types.Part.from_bytes(
+                     data=audio_bytes,
+                     mime_type='audio/mp3'
+                 )
+             ]
+         )
+
+         # CRITICAL: Validate the response before accessing the 'text' attribute.
+         if not response.candidates or not response.text:
+             print(f"ERROR: Gemini response is empty or was blocked. Full response: {response}", file=sys.stderr)
+             raise ValueError("Gemini API returned an invalid response for inline audio.")
+
+         transcription = response.text.strip()
+         print(f"DEBUG: Inline audio transcription: {transcription}", file=sys.stderr)
+     except Exception as e:
+         print(f"ERROR: Inline audio processing failed: {e}", file=sys.stderr)
+     ```
+   * **Timestamp References**: You can reference specific sections using MM:SS format:
+     ```python
+     prompt = "Provide a transcript of the speech from 02:30 to 03:29."
+     response = client.models.generate_content(
+         model='gemini-2.5-pro',
+         contents=[prompt, uploaded_file]
+     )
+     ```
+   * **Token Counting for Audio**:
+     ```python
+     response = client.models.count_tokens(
+         model='gemini-2.5-pro',
+         contents=[uploaded_file]
+     )
+     print(f"DEBUG: Audio token count: {response.total_tokens}", file=sys.stderr)
+     ```
+   * **Supported Audio Formats**: WAV (audio/wav), MP3 (audio/mp3), AIFF (audio/aiff), AAC (audio/aac), OGG Vorbis (audio/ogg), FLAC (audio/flac)
+   * **Audio Technical Details**:
+     - Each second of audio = 32 tokens (1 minute = 1,920 tokens)
+     - Maximum audio length: 9.5 hours per prompt
+     - Audio downsampled to 16 Kbps resolution
+     - Multi-channel audio combined to single channel
+     - Can understand non-speech (music, sound effects, etc.)
+   * **Common Use Cases**: Audio transcription, audio analysis, sound identification, audio Q&A, timestamp-specific queries
+   * **Best Practices**: 
+     - Use file upload for large files (>20MB) or files used multiple times
+     - Use inline data for small files or one-time use
+     - Be specific in prompts: "Generate a transcript", "Describe the audio", "What sounds are present?"
+     - Use timestamps for segment-specific analysis
+     - Handle exceptions for both upload and generation phases
+
+3. Audio Processing:
+   - pydub - Audio processing
+   - soundfile - Sound file I/O
+   - scipy - Scientific computing
+
+4. **Speech-to-Text and Subtitle Generation (OpenAI Whisper)**:
+    *   **Core Principle**: To generate accurate subtitles, you will use the OpenAI Whisper API. This is a two-step process: first, extract the audio from the input video, then send that audio to Whisper for transcription with word-level timestamps.
+    *   **API Usage**:
+        *   The `openai` Python library is available for both transcription (Whisper) and text-to-speech (TTS).
+        *   The API key will be available in the `OPENAI_API_KEY` environment variable.
+        *   You MUST initialize the client like this:
+          ```python
+          from openai import OpenAI
+          client = OpenAI()
+          ```
+
+    *   **Mandatory Workflow**:
+        1.  **Extract Audio**: Your script MUST first extract the audio from the input video file into a separate audio file (e.g., `.mp3`). This is because the audio transcription API does not accept video files.
+            ```python
+            # Example using ffmpeg
+            import subprocess
+            import os
+
+            # Assuming WORK_DIR is defined, e.g., os.path.join("/tmp", os.environ["EXECUTION_ID"])
+            input_video_path = "/path/to/downloaded/video.mp4"
+            output_audio_path = os.path.join(WORK_DIR, "extracted_audio.mp3")
+            
+            ffmpeg_extract_audio_cmd = [
+                "ffmpeg",
+                "-i", input_video_path,
+                "-vn", # Disable video
+                "-acodec", "libmp3lame", # Use MP3 codec
+                "-q:a", "2", # Good quality
+                "-y", # Overwrite output
+                output_audio_path
+            ]
+            subprocess.run(ffmpeg_extract_audio_cmd, check=True, capture_output=True)
+            ```
+        2.  **Get Audio Duration for Costing**: You MUST get the duration of the extracted audio file in seconds to calculate the API cost.
+            ```python
+            # Example using ffprobe
+            import subprocess
+            import math
+
+            ffprobe_cmd = [
+                "ffprobe",
+                "-v", "error",
+                "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                output_audio_path
+            ]
+            duration_str = subprocess.run(ffprobe_cmd, check=True, capture_output=True, text=True).stdout
+            audio_duration_seconds = float(duration_str.strip())
+            
+            # This duration will be used later to calculate the whisper cost.
+            ```
+        3.  **Transcribe with Whisper**: Call the Whisper `transcriptions.create` endpoint. You MUST use the `whisper-1` model to get word-level timestamps.
+            *   **CRITICAL**: You MUST request `response_format="verbose_json"` and `timestamp_granularities=["word"]`. This provides the structured data needed for reliable SRT creation.
+            ```python
+            # ... after extracting audio to output_audio_path
+            audio_file = open(output_audio_path, "rb")
+            transcription = client.audio.transcriptions.create(
+              model="whisper-1",
+              file=audio_file,
+              response_format="verbose_json",
+              timestamp_granularities=["word"]
+            )
+            # The result is a list of word objects in transcription.words
+            ```
+        4.  **Generate SRT from Word Timestamps**: You MUST include and use the following helper function to convert the word-level timestamp data from Whisper into a valid SRT file. Do not attempt to build the SRT file manually.
+            ```python
+            # MANDATORY HELPER FUNCTION
+            def generate_srt_from_words(words, max_line_length=42, max_words_per_line=7):
+                """
+                Generates a valid SRT formatted string from Whisper's word-level timestamp data.
+
+                Args:
+                    words (list): The list of TranscriptionWord objects from the Whisper API response.
+                    max_line_length (int): The approximate maximum number of characters per subtitle line.
+                    max_words_per_line (int): The maximum number of words to group into a single line.
+                """
+                print("DEBUG: Generating SRT from word-level timestamps.", file=sys.stderr)
+                srt_blocks = []
+                current_block_text = []
+                start_time = None
+                end_time = None
+                cue_counter = 1
+
+                if not words:
+                    print("WARNING: Word list for SRT generation is empty.", file=sys.stderr)
+                    return ""
+
+                for i, word_data in enumerate(words):
+                    word = word_data.word
+                    
+                    if start_time is None:
+                        start_time = word_data.start
+
+                    current_block_text.append(word)
+                    end_time = word_data.end
+                    
+                    is_last_word = (i == len(words) - 1)
+                    current_line = " ".join(current_block_text)
+                    
+                    # Determine if the block should end
+                    end_of_block = False
+                    if is_last_word:
+                        end_of_block = True
+                    elif len(current_line) >= max_line_length:
+                        end_of_block = True
+                    elif len(current_block_text) >= max_words_per_line:
+                        end_of_block = True
+                    elif (words[i+1].start - end_time) > 1.0: # Check for a pause of >1s
+                        end_of_block = True
+
+                    if end_of_block:
+                        start_h, rem = divmod(start_time, 3600)
+                        start_m, start_s_full = divmod(rem, 60)
+                        start_s = int(start_s_full)
+                        start_ms = int((start_s_full - start_s) * 1000)
+                        
+                        end_h, rem = divmod(end_time, 3600)
+                        end_m, end_s_full = divmod(rem, 60)
+                        end_s = int(end_s_full)
+                        end_ms = int((end_s_full - end_s) * 1000)
+                        
+                        timestamp_start = f"{int(start_h):02}:{int(start_m):02}:{int(start_s):02},{start_ms:03}"
+                        timestamp_end = f"{int(end_h):02}:{int(end_m):02}:{int(end_s):02},{end_ms:03}"
+                        
+                        srt_blocks.append(str(cue_counter))
+                        srt_blocks.append(f"{timestamp_start} --> {timestamp_end}")
+                        srt_blocks.append(current_line)
+                        srt_blocks.append("")
+                        
+                        cue_counter += 1
+                        current_block_text = []
+                        start_time = None
+                
+                print(f"DEBUG: Generated {cue_counter - 1} SRT blocks.", file=sys.stderr)
+                return "\\n".join(srt_blocks)
+            ```
+        5.  **Save the SRT file**: Save the output of the `generate_srt_from_words` function to a `.srt` file in your `WORK_DIR`.
+        6.  **Style and Burn (Optional)**: If styling is needed, use the same `srt` -> `ass` conversion and style injection method as described previously. This part of the process remains unchanged.
+        7.  **Calculate and Report Cost**: At the end of the script, before printing the final JSON outputs, you MUST calculate the cost for the Whisper API call using the `audio_duration_seconds` obtained in step 2 and add it to the final costs report.
+
+5. Audio Processing (continued):
+   - **OpenAI Text-to-Speech (TTS)**: Generate high-quality audio from text using OpenAI's TTS models.
+     * **Available Models**:
+       - `gpt-4o-mini-tts` - Newest and most reliable model with advanced control (recommended)
+       - `tts-1` - Lower latency, lower quality
+       - `tts-1-hd` - Higher quality, higher latency
+     * **Required Python Library**: `openai`
+     * **Required Imports**: `from openai import OpenAI`, `import os`, `import sys`
+
+     * **Client Initialization**:
+       ```python
+       from openai import OpenAI
+       
+       # Initialize OpenAI client (API key from environment variable)
+       client = OpenAI()  # Uses OPENAI_API_KEY environment variable automatically
+       ```
+
+     * **Basic Text-to-Speech Generation**:
+       ```python
+       from openai import OpenAI
+       import os
+       import sys
+       
+       client = OpenAI()
+       
+       try:
+           # Basic TTS generation
+           text_to_speak = "Today is a wonderful day to build something people love!"
+           voice = "coral"  # Choose from available voices
+           
+           print(f"DEBUG: Generating TTS with voice: {voice} for text: '{text_to_speak}'", file=sys.stderr)
+           
+           response = client.audio.speech.create(
+               model="gpt-4o-mini-tts",  # Use the most advanced model
+               voice=voice,
+               input=text_to_speak,
+               response_format="mp3"  # Default format
+           )
+           
+           # Save the audio file
+           output_path = os.path.join(WORK_DIR, "tts_output.mp3")
+           with open(output_path, "wb") as f:
+               f.write(response.content)
+           
+           print(f"DEBUG: TTS audio saved to {output_path}", file=sys.stderr)
+           
+       except Exception as e:
+           print(f"ERROR: OpenAI TTS generation failed: {e}", file=sys.stderr)
+           # Handle error appropriately
+       ```
+
+     * **Advanced TTS with Instructions (gpt-4o-mini-tts only)**:
+       ```python
+       from openai import OpenAI
+       import os
+       import sys
+       
+       client = OpenAI()
+       
+       try:
+           text_to_speak = "Welcome to our service!"
+           voice = "coral"
+           instructions = "Speak in a cheerful and positive tone."
+           
+           print(f"DEBUG: Generating advanced TTS with instructions: '{instructions}'", file=sys.stderr)
+           
+           response = client.audio.speech.create(
+               model="gpt-4o-mini-tts",
+               voice=voice,
+               input=text_to_speak,
+               instructions=instructions,  # Control accent, emotion, intonation, etc.
+               response_format="wav"  # Use WAV for better quality
+           )
+           
+           # Save the audio file
+           output_path = os.path.join(WORK_DIR, "tts_output.wav")
+           with open(output_path, "wb") as f:
+               f.write(response.content)
+           
+           print(f"DEBUG: Advanced TTS audio saved to {output_path}", file=sys.stderr)
+           
+       except Exception as e:
+           print(f"ERROR: OpenAI advanced TTS generation failed: {e}", file=sys.stderr)
+           # Handle error appropriately
+       ```
+
+     * **Streaming TTS (for real-time applications)**:
+       ```python
+       from openai import OpenAI
+       import os
+       import sys
+       
+       client = OpenAI()
+       
+       try:
+           text_to_speak = "This is streaming text-to-speech."
+           voice = "alloy"
+           
+           print(f"DEBUG: Starting streaming TTS generation", file=sys.stderr)
+           
+           with client.audio.speech.with_streaming_response.create(
+               model="gpt-4o-mini-tts",
+               voice=voice,
+               input=text_to_speak,
+               instructions="Speak clearly and at a moderate pace.",
+               response_format="pcm"  # Use PCM for lowest latency
+           ) as response:
+               output_path = os.path.join(WORK_DIR, "tts_stream.pcm")
+               response.stream_to_file(output_path)
+           
+           print(f"DEBUG: Streaming TTS audio saved to {output_path}", file=sys.stderr)
+           
+       except Exception as e:
+           print(f"ERROR: OpenAI streaming TTS failed: {e}", file=sys.stderr)
+           # Handle error appropriately
+       ```
+
+     * **Voice Options** (11 built-in voices, optimized for English):
+       - `alloy` - Balanced, neutral voice
+       - `ash` - Clear, articulate voice
+       - `ballad` - Smooth, warm voice
+       - `coral` - Bright, cheerful voice
+       - `echo` - Rich, deep voice
+       - `fable` - Expressive, storytelling voice
+       - `nova` - Young, energetic voice
+       - `onyx` - Strong, confident voice
+       - `sage` - Wise, mature voice
+       - `shimmer` - Light, airy voice
+
+     * **Advanced Control with gpt-4o-mini-tts** (use `instructions` parameter):
+       - **Accent**: "Speak with a British accent", "Use an American Southern accent"
+       - **Emotional range**: "Sound excited", "Speak sadly", "Be enthusiastic"
+       - **Intonation**: "Use a questioning tone", "Speak declaratively"
+       - **Impressions**: "Imitate a news anchor", "Sound like a friendly teacher"
+       - **Speed**: "Speak slowly and clearly", "Talk at a fast pace"
+       - **Tone**: "Use a professional tone", "Be casual and friendly"
+       - **Whispering**: "Whisper the text", "Speak in a hushed tone"
+
+     * **Output Formats**:
+       - `mp3` - Default, good for general use
+       - `opus` - Low latency, internet streaming
+       - `aac` - Digital compression, mobile-friendly
+       - `flac` - Lossless compression, archival quality
+       - `wav` - Uncompressed, low-latency applications
+       - `pcm` - Raw samples, 24kHz 16-bit, lowest latency
+
+     * **Supported Languages**: While voices are optimized for English, the model supports the same languages as Whisper including:
+       Afrikaans, Arabic, Armenian, Azerbaijani, Belarusian, Bosnian, Bulgarian, Catalan, Chinese, Croatian, Czech, Danish, Dutch, English, Estonian, Finnish, French, Galician, German, Greek, Hebrew, Hindi, Hungarian, Icelandic, Indonesian, Italian, Japanese, Kannada, Kazakh, Korean, Latvian, Lithuanian, Macedonian, Malay, Marathi, Maori, Nepali, Norwegian, Persian, Polish, Portuguese, Romanian, Russian, Serbian, Slovak, Slovenian, Spanish, Swahili, Swedish, Tagalog, Tamil, Thai, Turkish, Ukrainian, Urdu, Vietnamese, and Welsh.
+
+     * **Usage Notes**:
+       - OpenAI usage policies require clear disclosure that the voice is AI-generated
+       - For fastest response times, use `wav` or `pcm` formats
+       - The `gpt-4o-mini-tts` model offers the most advanced control features
+       - Text input is limited to reasonable lengths (check OpenAI documentation for current limits)
+       - Custom voices are not supported - use the 11 built-in voices
+
+   - **Lyria RealTime Music Generation (Experimental)**: Interactive, real-time, streaming instrumental music generation.
+     * **CRITICAL: This API is NOT a Vertex AI service. The client MUST be configured to use the global `generativelanguage.googleapis.com` endpoint.**
+     * Model: `models/lyria-realtime-exp` (Experimental - uses WebSockets).
+     * Required Python Library: `google-genai` (which includes `google-api-core`).
+     * Required Imports: `asyncio`, `from google import genai`, `from google.genai import types`, `import os`, `import sys`, `import wave`, `import contextlib`, `from google.api_core import client_options`.
+
+     * **Mandatory Usage Pattern**: You must use the following helper functions to generate music. This pattern correctly initializes the client and handles the asynchronous streaming.
+       ```python
+       # --- Lyria Music Generation Helpers ---
+       
+       def save_wave_file(path: str, audio_data: bytes, channels=2, sample_rate=48000, sample_width_bytes=2):
+           """Saves raw PCM audio data to a WAV file."""
+           print(f"DEBUG: Saving {len(audio_data)} bytes of audio data to {path}", file=sys.stderr)
+           try:
+               with contextlib.closing(wave.open(path, "wb")) as wf:
+                   wf.setnchannels(channels)
+                   wf.setsampwidth(sample_width_bytes)
+                   wf.setframerate(sample_rate)
+                   wf.writeframes(audio_data)
+               print(f"DEBUG: Successfully saved WAV file to {path}", file=sys.stderr)
+               return path
+           except Exception as e:
+               print(f"ERROR: Failed to save WAV file: {e}", file=sys.stderr)
+               return None
+
+       async def receive_audio_chunks(session, audio_chunk_collector):
+           """Background task to collect incoming audio chunks from Lyria."""
+           print("DEBUG: Lyria: Listening for audio chunks...", file=sys.stderr)
+           try:
+               async for message in session.receive():
+                   if message.server_content and message.server_content.audio_chunks:
+                       audio_data = message.server_content.audio_chunks[0].data
+                       audio_chunk_collector.append(audio_data)
+                   elif message.server_content and message.server_content.filtered_prompt:
+                       print(f"WARNING: Lyria prompt filtered: {message.server_content.filtered_prompt}", file=sys.stderr)
+               await asyncio.sleep(1e-9)
+           except asyncio.CancelledError:
+               print("DEBUG: Lyria: Audio receiving task cancelled.", file=sys.stderr)
+           except Exception as e:
+               print(f"ERROR: Lyria: Error in receiving audio chunks: {e}", file=sys.stderr)
+
+       async def _run_lyria_session_async(prompt: str, duration_seconds: float):
+           """Connects to Lyria, generates music, and returns the audio data."""
+           print(f"DEBUG: Starting Lyria session for {duration_seconds}s with prompt: '{prompt}'", file=sys.stderr)
+           
+           # CRITICAL: To use the Lyria (Gemini) endpoint instead of the default Vertex AI endpoint,
+           # we temporarily unset the environment variables that force the client into Vertex AI mode.
+           # This allows genai.Client() to use Application Default Credentials for the global Gemini API.
+           client = None
+           original_env = {
+               'GOOGLE_GENAI_USE_VERTEXAI': os.environ.pop('GOOGLE_GENAI_USE_VERTEXAI', None),
+               'GOOGLE_CLOUD_PROJECT': os.environ.pop('GOOGLE_CLOUD_PROJECT', None),
+               'GOOGLE_CLOUD_LOCATION': os.environ.pop('GOOGLE_CLOUD_LOCATION', None)
+           }
+
+           try:
+               # With the Vertex env vars removed, the client will use the global endpoint with ADC.
+               # The 'v1alpha' API version is required for Lyria's streaming API.
+               client = genai.Client(http_options={'api_version': 'v1alpha'})
+           except Exception as e:
+               print(f"ERROR: Failed to initialize Gemini Client for Lyria: {e}", file=sys.stderr)
+               # Restore environment variables in case of failure
+               for key, value in original_env.items():
+                   if value is not None:
+                       os.environ[key] = value
+               raise
+
+           audio_chunk_collector = []
+           
+           try:
+               async with client.aio.live.music.connect(model='models/lyria-realtime-exp') as session:
+                   print("DEBUG: Lyria session connected.", file=sys.stderr)
+                   async with asyncio.TaskGroup() as tg:
+                       audio_receive_task = tg.create_task(receive_audio_chunks(session, audio_chunk_collector))
+                       
+                       await session.set_weighted_prompts(
+                           prompts=[types.WeightedPrompt(text=prompt, weight=1.0)]
+                       )
+                       await session.set_music_generation_config(
+                           config=types.LiveMusicGenerationConfig(bpm=90, guidance=4.0)
+                       )
+                       
+                       print("DEBUG: Lyria: Starting music playback...", file=sys.stderr)
+                       await session.play()
+                       await asyncio.sleep(duration_seconds)
+                       print("DEBUG: Lyria: Stopping music playback...", file=sys.stderr)
+                       await session.stop()
+                       
+                       await asyncio.sleep(1) # Give a moment for final chunks to arrive
+                       audio_receive_task.cancel()
+
+           except Exception as e:
+               print(f"ERROR: Lyria session failed: {e}", file=sys.stderr)
+               return None
+           finally:
+                # IMPORTANT: Restore the environment variables so other parts of the app work correctly.
+                for key, value in original_env.items():
+                    if value is not None:
+                        os.environ[key] = value
+           
+           return b''.join(audio_chunk_collector)
+
+       def generate_lyria_music(prompt: str, duration_seconds: float, output_path: str) -> Optional[str]:
+           """Main sync wrapper to run Lyria session and save the output."""
+           # Ensure duration is reasonable for API usage
+           safe_duration = max(5.0, min(duration_seconds, 59.0))
+           print(f"DEBUG: Generating Lyria music for {safe_duration}s.", file=sys.stderr)
+           
+           audio_data = asyncio.run(_run_lyria_session_async(prompt, safe_duration))
+           
+           if not audio_data:
+               print("ERROR: Lyria music generation returned no audio data.", file=sys.stderr)
+               return None
+           
+           return save_wave_file(output_path, audio_data)
+           
+       # Example Usage:
+       # music_prompt = "calm instrumental background music"
+       # bgm_duration = 20.5
+       # output_music_path = get_output_path("lyria_bgm", "wav")
+       # local_music_path = generate_lyria_music(music_prompt, bgm_duration, output_music_path)
+       # if local_music_path:
+       #     # Proceed with using the generated WAV file
+       #     pass
+       ```
+     * **Prompting**: Descriptive prompts with adjectives for mood, genre, instrumentation. Iterate and steer gradually. Experiment with `weight`.
+       - Example prompt categories:
+         - **Instruments**: 303 Acid Bass, 808 Hip Hop Beat, Accordion, Alto Saxophone, Bagpipes, Balalaika Ensemble, Banjo, Bass Clarinet, Bongos, Boomy Bass, Bouzouki, Buchla Synths, Cello, Charango, Clavichord, Conga Drums, Didgeridoo, Dirty Synths, Djembe, Drumline, Dulcimer, Fiddle, Flamenco Guitar, Funk Drums, Glockenspiel, Guitar, Hang Drum, Harmonica, Harp, Harpsichord, Hurdy-gurdy, Kalimba, Koto, Lyre, Mandolin, Maracas, Marimba, Mbira, Mellotron, Metallic Twang, Moog Oscillations, Ocarina, Persian Tar, Pipa, Precision Bass, Ragtime Piano, Rhodes Piano, Shamisen, Shredding Guitar, Sitar, Slide Guitar, Smooth Pianos, Spacey Synths, Steel Drum, Synth Pads, Tabla, TR-909 Drum Machine, Trumpet, Tuba, Vibraphone, Viola Ensemble, Warm Acoustic Guitar, Woodwinds
+     * **`MusicGenerationConfig` Parameters**:
+       - `guidance`: float (0.0-6.0, default 4.0). Strictness to prompts.
+       - `bpm`: int (60-200). Beats Per Minute. Requires `reset_context()`.
+       - `density`: float (0.0-1.0). Musical note density.
+       - `brightness`: float (0.0-1.0). Tonal quality.
+       - `scale`: `types.Scale` enum. Musical scale. Requires `reset_context()`. (See enum values below).
+       - `mute_bass`: bool (default False).
+       - `mute_drums`: bool (default False).
+       - `only_bass_and_drums`: bool (default False).
+       - `music_generation_mode`: `types.MusicGenerationMode` enum (`QUALITY` (default) or `DIVERSITY`).
+       - `temperature`: float (0.0-3.0, default 1.1).
+       - `top_k`: int (1-1000, default 40).
+       - `seed`: int (0 to 2,147,483,647, random by default).
+     * **`types.Scale` Enum Values (Major / Relative Minor)**:
+       - The model does not distinguish between relative major and minor keys, so each enum corresponds to both. For example, `C_MAJOR_A_MINOR` can be used for either C major or A minor.
+       - `C_MAJOR_A_MINOR`, `D_FLAT_MAJOR_B_FLAT_MINOR`, `D_MAJOR_B_MINOR`, `E_FLAT_MAJOR_C_MINOR`, `E_MAJOR_D_FLAT_MINOR`, `F_MAJOR_D_MINOR`, `G_FLAT_MAJOR_E_FLAT_MINOR`, `G_MAJOR_E_MINOR`, `A_FLAT_MAJOR_F_MINOR`, `A_MAJOR_G_FLAT_MINOR`, `B_FLAT_MAJOR_G_MINOR`, `B_MAJOR_A_FLAT_MINOR`, `SCALE_UNSPECIFIED` (model decides).
+       - **Output Specifications**: Raw 16-bit PCM Audio, 48kHz sample rate, 2 channels (stereo).
+       - Audio chunks are received via `session.receive()`. Client must buffer for smooth playback or collect for saving.
+     * **Limitations**: Instrumental music only. Prompts checked by safety filters (see `filtered_prompt` in server messages). Output audio is watermarked.
+     * **Best Practices**: Implement robust client-side audio buffering to ensure smooth playback (this helps account for network jitter and latency variations). Steer music gradually.
+
+6. Advanced Media Processing:
+   - rembg - Background removal
+
+7. Utilities:
+   - tqdm - Progress bars
+   - pillow_heif - HEIF/HEIC image support
+   - requests - HTTP requests
+   - boto3 - AWS SDK for Python (for S3 interactions)
+
+=== External APIs (Stock Media) ===
+**IMPORTANT GUIDELINE:** Before using any of the external APIs listed below (for image, video, or audio generation), first consider if the user's request can be fulfilled using the available installed packages like `ffmpeg` (for video/audio editing, format conversion, effects, etc.), `Pillow` (for image manipulation), `opencv-python-headless` (for advanced image analysis/manipulation), or `pydub` (for audio manipulation). External APIs should be considered a secondary option, to be used only when the capabilities of the local tools are exceeded or the request specifically asks for AI-powered generation (e.g., "generate an image of...", "create a video based on this text...").
+
+   - Image Generation (Imagen 4): For generating images using Google's AI models.
+     * All generated images include a SynthID watermark. Image generation may not be available in all regions.
+     * Required Python Library: `google-genai`
+     * Required Imports: `from google import genai`, `from google.genai import types`, `from PIL import Image`, `from io import BytesIO`, `import os`, `import sys`
+
+     
+     * **Client Initialization**:
+       ```python
+       from google import genai
+       # The client automatically uses Vertex AI config from environment variables.
+       client = genai.Client() 
+       ```
+
+     * **Using Imagen 4 for Image Generation**
+       * Model: `imagen-4.0-generate-preview-06-06`
+       * Task: High-quality image generation from text.
+       * Usage:
+         - Construct prompt:
+           ```python
+           image_prompt = "<User's image prompt here, English only>"
+           print(f"DEBUG: Generating Imagen 4 image with prompt: {image_prompt}", file=sys.stderr)
+           ```
+         - Generate images:
+           ```python
+           try:
+               response = client.models.generate_images( # Note: generate_images, not generate_content
+                   model="imagen-4.0-generate-preview-06-06",
+                   prompt=image_prompt,
+                   config=types.GenerateImagesConfig(
+                       number_of_images=1, # Range 1-4, default is 4 in API, but 1 is safer start
+                       aspect_ratio="1:1", # Default "1:1". Others: "3:4", "4:3", "9:16", "16:9"
+                       person_generation="ALLOW_ADULT" # Default "ALLOW_ADULT". Alternative: "DONT_ALLOW"
+                       # negative_prompt="text, watermark, blurry" # Optional
+                   )
+               )
+               # Optional: print(f"DEBUG: Imagen response: {response}", file=sys.stderr)
+           except Exception as e:
+               print(f"ERROR: Imagen 4 image generation failed: {e}", file=sys.stderr)
+               # Handle error appropriately
+               # Example: return []
+               response = None # Ensure response is None if exception occurs
+           ```
+         - Parse response and save images:
+           ```python
+           saved_image_paths = []
+           if response and hasattr(response, 'generated_images') and response.generated_images:
+               for i, generated_image_data in enumerate(response.generated_images): # API returns GenerateImagesResponse with list of GeneratedImage
+                   try:
+                       print(f"DEBUG: Processing Imagen generated image {i+1}.", file=sys.stderr)
+                       # Access image bytes directly from generated_image_data.image.image_bytes
+                       image_bytes = generated_image_data.image.image_bytes 
+                       image = Image.open(BytesIO(image_bytes))
+                       # Define output path in /tmp
+                       output_filename = f"{ASSISTANT_PREFIX}imagen_image_{i}_{random_string}.png" # Use helper
+                       output_path = os.path.join('/tmp', output_filename)
+                       image.save(output_path)
+                       print(f"DEBUG: Saved generated Imagen image to {output_path}", file=sys.stderr)
+                       saved_image_paths.append(output_path)
+                   except Exception as e:
+                       print(f"ERROR: Failed to process or save generated Imagen image {i+1}: {e}", file=sys.stderr)
+           # If response is None, error was already printed.
+
+           if saved_image_paths:
+              # Use saved_image_paths (list of paths)
+              pass
+           else:
+              print("ERROR: Failed to generate or save any images from Imagen 4.", file=sys.stderr)
+              # Handle failure
+           ```
+         - **Prompting for Imagen**: For best results, use descriptive English prompts. Consider subject, context, and style. Iterate on prompts if needed. Max prompt length is ~480 tokens. Refer to official Imagen prompt guide for advanced techniques (camera angles, lighting, art styles, text in images, etc.).
+
+     * **General Post-Processing for All Generated Images**:
+       - After saving any generated image to `/tmp` (e.g., `saved_image_path` from Gemini or paths in `saved_image_paths` from Imagen), treat the file(s) like any other assistant-generated file.
+       - Ensure the *final* desired output (potentially after further processing done elsewhere) is saved to the `/tmp` work directory using a helper function like `get_output_path("final_image", "png")`.
+
+   - Veo Video Generation API: For generating videos from text or images when requested by the user.
+     * Generated videos are watermarked with SynthID.
+     * Required Python Library: `google-genai`
+     * Required Imports: `import time`, `from google import genai`, `from google.genai import types`, `import os`, `import sys`, `import subprocess`
+
+     * Client Initialization:
+       ```python
+       client = genai.Client() # Automatically configured for Vertex AI
+       ```
+
+     * **CRITICAL `duration_seconds` RULE**:
+       - The `duration_seconds` parameter for `types.GenerateVideosConfig` **MUST be an INTEGER**.
+       - The value must be between 5 and 8 (inclusive).
+       - If you calculate a duration from another source (e.g., an audio file's length), you MUST convert it to a valid integer.
+       - **Correct Way to Calculate Duration**:
+         ```python
+         # Example: audio_duration_seconds = 8.29
+         # Clamp the value between 5 and 8, then round to the nearest integer.
+         veo_duration = max(5, min(8, round(audio_duration_seconds))) # Result: 8
+         ```
+
+     * **1. Usage (Text-to-Video)**:
+       - If the user requests a stock video from text (e.g., "generate a video of a beach"), use this method.
+       - Start the long-running generation operation:
+         ```python
+         video_prompt = "<User's video prompt here>"
+         # CRITICAL: Define a GCS output path. The service account needs write permissions.
+         # The path should be unique per execution to avoid collisions.
+         # Assumes S3_BUCKET_NAME and EXECUTION_ID env vars are available.
+         output_gcs_uri = f"gs://{S3_BUCKET_NAME}/veo-output/{EXECUTION_ID}/{generate_random_string()}/"
+         print(f"DEBUG: Starting Veo text-to-video generation with prompt: {video_prompt}", file=sys.stderr)
+         
+         try:
+             operation = client.models.generate_videos(
+                 model="veo-2.0-generate-001",
+                 prompt=video_prompt,
+                 config=types.GenerateVideosConfig(
+                     person_generation="dont_allow", # or "allow_adult"
+                     aspect_ratio="16:9", # or "9:16"
+                     duration_seconds=5,
+                     # CRITICAL: Provide the GCS URI for Vertex AI video generation
+                     output_gcs_uri=output_gcs_uri
+                 ),
+             )
+             print(f"DEBUG: Veo operation started: {operation.name}", file=sys.stderr)
+         except Exception as e:
+             print(f"ERROR: Failed to start Veo text-to-video generation: {e}", file=sys.stderr)
+             operation = None
+         ```
+       - **CRITICAL: Asynchronous Operation:** Poll the operation status and download from GCS using the logic described below.
+
+     * **2. Usage (Image-to-Video)**: There are two main workflows for this.
+
+       * **Workflow A: Chaining Imagen -> Veo (Recommended when generating a new image)**
+         - This is the most direct and reliable method. It avoids saving the image to disk and re-uploading it.
+         - **CRITICAL**: Use the `Image` object from the Imagen response *directly* as the `image` parameter for Veo.
+         ```python
+         # Step 1: Generate the image with Imagen
+         imagen_response = client.models.generate_images(
+             model="imagen-4.0-generate-preview-06-06",
+             prompt="a photorealistic cat",
+             # ... config ...
+         )
+         if not imagen_response.generated_images:
+             raise ValueError("Imagen failed to generate an image.")
+         
+         # Step 2: Get the 'Image' object from the response. DO NOT save it to disk.
+         input_image_for_veo = imagen_response.generated_images[0].image
+         
+         # Step 3: Pass the 'Image' object directly to Veo, providing an output GCS URI
+         video_prompt_for_image = "make the cat run"
+         output_gcs_uri = f"gs://{S3_BUCKET_NAME}/veo-output/{EXECUTION_ID}/{generate_random_string()}/"
+         try:
+             operation = client.models.generate_videos(
+                 model="veo-2.0-generate-001",
+                 prompt=video_prompt_for_image,
+                 image=input_image_for_veo, # Pass the object directly
+                 config=types.GenerateVideosConfig(
+                     output_gcs_uri=output_gcs_uri,
+                     # ... other config ...
+                 )
+             )
+         except Exception as e:
+             print(f"ERROR: Failed to start Veo image-to-video generation: {e}", file=sys.stderr)
+             operation = None
+         ```
+
+       * **Workflow B: Using a Pre-existing Local Image File**
+         - Use this when you start with an image file already on disk (e.g., from a user upload).
+         - **CRITICAL**: You MUST read the file into bytes and pass it as a `types.Part` object. DO NOT use `client.files.upload`.
+         ```python
+         local_image_path = "/tmp/some_execution_id/user_photo.png"
+         output_gcs_uri = f"gs://{S3_BUCKET_NAME}/veo-output/{EXECUTION_ID}/{generate_random_string()}/"
+         try:
+             # Step 1: Read the local image file into bytes
+             print(f"DEBUG: Reading image {local_image_path} for Veo...", file=sys.stderr)
+             with open(local_image_path, "rb") as f:
+                 image_bytes = f.read()
+
+             # Step 2: Create a Part object with the image bytes
+             image_part = types.Part.from_bytes(data=image_bytes, mime_type="image/png")
+
+             # Step 3: Pass the Part object to Veo, including the output GCS URI
+             operation = client.models.generate_videos(
+                 model="veo-2.0-generate-001",
+                 prompt="Animate this image",
+                 image=image_part, # Pass the Part object
+                 config=types.GenerateVideosConfig(
+                     output_gcs_uri=output_gcs_uri,
+                     # ... other config ...
+                 )
+             )
+         except Exception as e:
+             print(f"ERROR: Failed to start Veo image-to-video generation: {e}", file=sys.stderr)
+             operation = None
+         ```
+       - **CRITICAL: Asynchronous Operation:** After starting the operation with either workflow, you must poll the operation status and download from GCS.
+
+     * **Polling, Downloading, and Processing (MANDATORY for ALL Veo operations on Vertex AI)**:
+       - **CRITICAL**: In a Vertex AI environment, Veo saves the video to a Google Cloud Storage (GCS) URI that you must provide. The following workflow is mandatory.
+
+       - **Helper Function for GCS Download**: First, ensure you have a helper function to download files from GCS. `gcloud storage` is the modern, recommended tool for this.
+         ```python
+         import subprocess
+         import re
+
+         def download_from_gcs(gcs_uri: str, local_dir: str) -> Optional[str]:
+             """Downloads content from a GCS URI to a local directory using 'gcloud storage cp'."""
+             if not gcs_uri.startswith("gs://"):
+                 print(f"ERROR: Invalid GCS URI: {gcs_uri}", file=sys.stderr)
+                 return None
+             
+             # The destination path for the download
+             local_path = os.path.join(local_dir, os.path.basename(gcs_uri.strip('/')))
+             
+             try:
+                 # Use --recursive for directory URIs, which Veo might return.
+                 recursive_flag = ["--recursive"] if gcs_uri.endswith('/') else []
+                 command = ["gcloud", "storage", "cp"] + recursive_flag + [gcs_uri, local_dir]
+
+                 print(f"DEBUG: Downloading from {gcs_uri} to {local_dir} using 'gcloud storage'...", file=sys.stderr)
+                 print(f"DEBUG: Executing command: {' '.join(command)}", file=sys.stderr)
+                 
+                 subprocess.run(command, check=True, capture_output=True, text=True)
+                 
+                 # After download, find the actual video file, as gcloud might create subdirectories.
+                 downloaded_mp4_files = []
+                 for root, _, files in os.walk(local_dir):
+                     for name in files:
+                         if name.lower().endswith('.mp4'):
+                             downloaded_mp4_files.append(os.path.join(root, name))
+                 
+                 if not downloaded_mp4_files:
+                     raise FileNotFoundError("gcloud storage cp ran, but no MP4 file was found in the destination.")
+
+                 # Assume the largest MP4 file is the one we want.
+                 main_video_file = max(downloaded_mp4_files, key=os.path.getsize)
+
+                 if os.path.exists(main_video_file) and os.path.getsize(main_video_file) > 0:
+                     print(f"DEBUG: GCS content downloaded successfully. Main video file: {main_video_file}", file=sys.stderr)
+                     return main_video_file
+                 else:
+                     raise FileNotFoundError("GCS download completed but the main video file is missing or empty.")
+
+             except subprocess.CalledProcessError as e:
+                 print(f"ERROR: 'gcloud storage cp' failed with code {e.returncode}. Stderr: {e.stderr}", file=sys.stderr)
+                 return None
+             except FileNotFoundError:
+                print("ERROR: 'gcloud' command not found. The Google Cloud SDK is required.", file=sys.stderr)
+                return None
+             except Exception as e:
+                 print(f"ERROR: An unexpected error occurred during GCS download: {e}", file=sys.stderr)
+                 return None
+         ```
+
+       - **Main Polling and Download Logic**:
+         ```python
+         if not operation:
+             print("ERROR: Veo operation was not initiated.", file=sys.stderr)
+             # Handle failure appropriately
+             return # Or raise an exception
+
+         saved_video_paths = []
+         while not operation.done:
+             print(f"DEBUG: Veo operation {operation.name} not done, sleeping for 20s...", file=sys.stderr)
+             time.sleep(20) # Check every 20 seconds
+             try:
+                 # CRITICAL: You MUST pass the entire 'operation' object to the get() method.
+                 # Passing 'operation.name' (a string) will cause an error.
+                 #
+                 # CORRECT USAGE:
+                 operation = client.operations.get(operation)
+                 #
+                 # --- DO NOT DO THIS (INCORRECT) ---
+                 # operation = client.operations.get(operation.name)
+
+             except Exception as e:
+                 print(f"ERROR: Failed to get operation status for {operation.name}: {e}", file=sys.stderr)
+                 break # Exit polling loop on error
+
+         print(f"DEBUG: Veo operation finished. Name: {operation.name}, Done: {operation.done}", file=sys.stderr)
+
+         if hasattr(operation, 'error') and operation.error:
+             print(f"ERROR: Veo operation {operation.name} failed: {operation.error}", file=sys.stderr)
+         elif operation.done:
+             result = operation.result
+             if not result.generated_videos:
+                 print(f"ERROR: Veo operation completed but returned no videos.", file=sys.stderr)
+             else:
+                 print(f"DEBUG: Veo generation successful. Processing {len(result.generated_videos)} videos.", file=sys.stderr)
+                 for n, generated_video_container in enumerate(result.generated_videos):
+                     try:
+                         # In Vertex AI, the result contains a GCS URI.
+                         gcs_uri = generated_video_container.video.uri
+                         print(f"DEBUG: Video {n} generated at GCS URI: {gcs_uri}", file=sys.stderr)
+
+                         # Use the helper function to download the video from GCS
+                         local_video_path = download_from_gcs(gcs_uri, WORK_DIR) # Assumes WORK_DIR is defined
+
+                         if local_video_path:
+                             print(f"DEBUG: Video {n} downloaded successfully to {local_video_path}.", file=sys.stderr)
+                             saved_video_paths.append(local_video_path)
+                         else:
+                             print(f"ERROR: Failed to download video {n} from GCS URI: {gcs_uri}", file=sys.stderr)
+
+                     except AttributeError:
+                         print(f"ERROR: Could not find '.video.uri' in result object for video {n}. Full object: {generated_video_container}", file=sys.stderr)
+                     except Exception as e:
+                         print(f"ERROR: Failed to download or save video {n} from operation {operation.name}: {e}", file=sys.stderr)
+         else:
+             print(f"ERROR: Veo operation {operation.name} did not complete successfully.", file=sys.stderr)
+
+         if not saved_video_paths:
+             print("ERROR: No videos were successfully generated or saved from Veo.", file=sys.stderr)
+             # Handle failure
+         ```
+     * **Prompting for Veo**: Good prompts are descriptive and clear. To get your generated video as close as possible to what you want, start with identifying your core idea, and then refine your idea by adding keywords and modifiers.
+
+     * After downloading to `/tmp`, treat the file(s) like any other assistant-generated file. Use a helper function like `get_output_path` to ensure standard naming.
+
+=== Font Handling ===
+* Available Font Families in Container:
+  * Open Sans (/usr/share/fonts/truetype/open-sans/):
+    - OpenSans-Regular.ttf
+    - OpenSans-Bold.ttf
+    - OpenSans-Italic.ttf
+    - OpenSans-BoldItalic.ttf
+  * Noto Fonts (/usr/share/fonts/truetype/noto/):
+    - NotoSans (Regular, Bold, Italic)
+    - NotoSerif (Regular, Bold, Italic)
+    - NotoMono (Regular, Bold)
+  * Ubuntu Fonts (/usr/share/fonts/truetype/ubuntu/):
+    - Ubuntu (Regular, Bold, Italic)
+    - UbuntuMono (Regular, Bold)
+  * Liberation Fonts (/usr/share/fonts/truetype/liberation/):
+    - LiberationSans (Regular, Bold, Italic)
+    - LiberationSerif (Regular, Bold, Italic)
+    - LiberationMono (Regular, Bold, Italic)
+  * DejaVu Fonts (/usr/share/fonts/truetype/dejavu/):
+    - DejaVuSans.ttf (Regular)
+    - DejaVuSans-Bold.ttf
+    - DejaVuSansMono.ttf (Regular)
+    - DejaVuSansMono-Bold.ttf
+    - DejaVuSerif.ttf (Regular)
+    - DejaVuSerif-Bold.ttf
+
+* Font Usage Guidelines:
+  * Choose the most appropriate font based on:
+    - Content type (headlines, body text, technical, multilingual)
+    - Visual style requirements
+    - Readability needs
+    - Target audience
+    - Content context
+  * Consider these characteristics when selecting fonts:
+    - Open Sans: Modern, clean, highly readable, great for web/video
+    - Noto Sans: Excellent multilingual support, modern look
+    - Ubuntu: Friendly, modern, good for tech content
+    - Liberation Sans: Professional, similar to Arial
+    - Deja Vu Sans: Traditional, good for technical content
+  * Use absolute paths when specifying fonts
+  * Check font existence before using
+  * If a specific font is not found, choose an appropriate alternative from available fonts
+  * Handle font loading errors gracefully
+  * Continue processing even if text rendering fails
+  * Print warning messages to stderr for font-related issues 

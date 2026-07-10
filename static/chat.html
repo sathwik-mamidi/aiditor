@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Aiditor</title>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="/static/chat.css">
+  <script src="/static/chat.js" defer></script>
+  <script>
+    !function (t, e) { var o, n, p, r; e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init bs ws ge fs capture De calculateEventProperties $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "), n = 0; n < o.length; n++)g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+    posthog.init('phc_uwnQVzcvPhfMOMqxj8a4sdm7SQwGsYRzQ1chPj7lW7V', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+    })
+  </script>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+      <div class="sidebar-content">
+        <div class="sidebar-header">
+          <button id="closeSidebarBtn" class="close-sidebar-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="icon">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <button id="newChatSidebarBtn" class="new-chat-sidebar-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="icon-sm">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New chat
+        </button>
+
+        <ul id="chatHistory" class="chat-history">
+        </ul>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <button id="toggleSidebarBtn" class="toggle-sidebar-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="icon">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+
+            <button id="newChatHeaderBtn" class="new-chat-header-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="icon-sm">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Chat
+            </button>
+
+            <div class="logo">
+              <a href="/" style="text-decoration: none;">
+                <span class="gradient-text">AIDITOR</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="header-right">
+            <!-- Credits Display -->
+            <div class="credits-display">
+              <span id="userPlanCredits" class="credits-text"></span>
+            </div>
+
+            <div class="settings-container">
+              <button id="settingsBtn" class="settings-btn" aria-label="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                  stroke="currentColor" class="icon-sm">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+              <div id="settingsDropdown" class="settings-dropdown hidden">
+                <!-- User Email Display -->
+                <div class="dropdown-email">
+                  <p id="userDropdownEmail" class="email-text" title="User Email"></p>
+                </div>
+                <!-- Upgrade Button -->
+                <button id="upgradeBtn" class="dropdown-item">
+                  <div class="dropdown-item-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="dropdown-icon" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Upgrade Plan
+                  </div>
+                </button>
+                <!-- Manage Subscription Button -->
+                <button id="manageSubscriptionBtn" class="dropdown-item hidden">
+                  <div class="dropdown-item-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                      stroke="currentColor" class="dropdown-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773 1.339a1.125 1.125 0 01-.217 1.45l-.53.742a1.125 1.125 0 01-.437 1.457l-.16.16c-.42.42-.63.98-.63 1.59v.24c0 .61.21 1.17.63 1.59l.16.16c.25.25.36.59.36.93v.57c0 .34-.11.68-.36.93l-.16.16c-.42.42-.63.98-.63 1.59v.24c0 .61.21 1.17.63 1.59l.53.742a1.125 1.125 0 01.217 1.45l-.773 1.339a1.125 1.125 0 01-1.45.12l-.737-.527c-.35-.25-.807-.272-1.205-.108-.396.166-.71.506-.78.93l-.149.894z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Manage Subscription
+                  </div>
+                </button>
+                <!-- Add Credits Button -->
+                <button id="addCreditsBtn" class="dropdown-item">
+                  <div class="dropdown-item-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="dropdown-icon" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Add Credits
+                  </div>
+                </button>
+                <button id="themeToggleBtn" class="dropdown-item">
+                  <div class="dropdown-item-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                      stroke="currentColor" class="dropdown-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                    </svg>
+                    <span id="themeToggleText">Light Mode</span>
+                  </div>
+                </button>
+                <button id="logoutBtn" class="dropdown-item">
+                  <div class="dropdown-item-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                      stroke="currentColor" class="dropdown-icon">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    Log out
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Chat Area -->
+      <div id="chatAreaWrapper" class="chat-area-wrapper">
+        <main id="mainContent" class="main-chat-content">
+          <div id="messagesContainer" class="messages-container">
+            <div id="welcomeMessage" class="welcome-message hidden">
+              <div class="welcome-content">
+                <h1 class="welcome-title">What can I help you with today?</h1>
+                <div class="example-prompts-grid">
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Add watermark to all these images</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Convert this video to GIF</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Add subtitles to this video</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Generate a background score for this video</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Trim this video from 0:10 to 0:30</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Create a new video from these clips, similar to the reference video</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Compress this video to a smaller size</p>
+                  </div>
+                  <div class="prompt-card">
+                    <p class="prompt-card-text">Change format of this image to PNG</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="messages" class="messages">
+            </div>
+          </div>
+        </main>
+
+        <!-- Input Area -->
+        <div id="inputArea" class="input-area">
+          <div class="input-container">
+            <div id="errorContainer" class="error-container hidden">
+            </div>
+
+            <div id="filePreviews" class="file-previews hidden">
+            </div>
+
+            <form id="messageForm" class="message-form">
+              <label for="file-upload" class="file-upload-label">
+                <input id="file-upload" type="file" multiple class="hidden" accept="image/*,video/*,audio/*" />
+                <button type="button" id="fileUploadBtn" class="attachment-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="icon-sm">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+              </label>
+              <div class="input-wrapper">
+                <textarea id="promptInput" placeholder="Add media files and enter your prompt..." class="prompt-input"
+                  rows="1"></textarea>
+                <button type="submit" id="submitBtn" class="send-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="icon-sm">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrade Modal -->
+  <div id="upgradeModal" class="modal hidden">
+    <div class="modal-content upgrade-modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Upgrade Your Plan</h3>
+        <button id="closeUpgradeModal" class="modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="plans-square-row">
+        <!-- Free Plan -->
+        <div id="plan-card-free" class="plan-card square">
+          <div class="plan-content">
+            <h4 class="plan-name">Free</h4>
+            <div class="plan-price">$0</div>
+            <ul class="plan-features">
+              <li class="plan-feature">All features</li>
+              <li class="plan-feature">100 credits per month</li>
+            </ul>
+            <button id="current-plan-button" disabled class="plan-button current-plan">Your Current Plan</button>
+          </div>
+        </div>
+        <!-- Pro Plan -->
+        <div id="plan-card-pro" class="plan-card square popular featured">
+          <div class="popular-badge">Popular</div>
+          <div class="plan-content">
+            <h4 class="plan-name">Pro</h4>
+            <div class="plan-price">$20<span class="price-period">/month</span></div>
+            <ul class="plan-features">
+              <li class="plan-feature">All features</li>
+              <li class="plan-feature">2000 credits per month</li>
+            </ul>
+            <button id="upgradeToProBtn" class="plan-button upgrade-button">Upgrade to Pro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Credits Modal -->
+  <div id="addCreditsModal" class="modal hidden">
+    <div class="modal-content credits-modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Credits</h3>
+        <button id="closeAddCreditsModal" class="modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="credits-options">
+        <!-- $20 Package -->
+        <div class="credit-package">
+          <div class="package-info">
+            <div>
+              <h4 class="package-title">2000 Credits</h4>
+              <p class="package-description">Perfect for small projects</p>
+            </div>
+            <button id="buy20CreditsBtn" class="buy-credits-btn">
+              $20
+            </button>
+          </div>
+        </div>
+
+        <!-- $100 Package -->
+        <div class="credit-package">
+          <div class="package-info">
+            <div>
+              <h4 class="package-title">10000 Credits</h4>
+              <p class="package-description">Great for regular users</p>
+            </div>
+            <button id="buy100CreditsBtn" class="buy-credits-btn">
+              $100
+            </button>
+          </div>
+        </div>
+
+        <!-- $500 Package -->
+        <div class="credit-package">
+          <div class="package-info">
+            <div>
+              <h4 class="package-title">50000 Credits</h4>
+              <p class="package-description">Best value for power users</p>
+            </div>
+            <button id="buy500CreditsBtn" class="buy-credits-btn">
+              $500
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-banner hidden">
+    <div class="cookie-content">
+      <p class="cookie-text">
+        We use cookies to enhance your experience and for analytics. By continuing to visit this site you agree to our
+        use of cookies.
+        <a href="/privacy" class="cookie-link">Learn more in our Privacy Policy</a>.
+      </p>
+      <button id="acceptCookieConsent" class="cookie-accept-btn">
+        Accept
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Cookie Consent Banner Logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const cookieConsentBanner = document.getElementById('cookieConsentBanner');
+      const acceptCookieConsentButton = document.getElementById('acceptCookieConsent');
+
+      if (cookieConsentBanner && acceptCookieConsentButton) {
+        if (localStorage.getItem('cookieConsent') !== 'accepted') {
+          setTimeout(() => {
+            cookieConsentBanner.classList.remove('hidden');
+          }, 500);
+        }
+
+        acceptCookieConsentButton.addEventListener('click', () => {
+          localStorage.setItem('cookieConsent', 'accepted');
+          cookieConsentBanner.classList.add('hidden');
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

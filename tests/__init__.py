@@ -1,0 +1,1 @@
+"""Aiditor test suite."""

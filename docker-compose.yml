@@ -1,0 +1,86 @@
+# Common configurations
+x-common-config: &common-config
+  restart: unless-stopped
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  security_opt:
+    - no-new-privileges:true
+
+services:
+  aiditor:
+    <<: *common-config
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aiditor:latest
+    container_name: aiditor
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./main.py:/workdir/main.py
+      - ./app:/workdir/app
+      - ./static:/workdir/static
+      - ./requirements.txt:/workdir/requirements.txt
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount GCP credentials file for Vertex AI authentication
+      - ./gcp-credentials.json:/workdir/gcp-credentials.json:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      python-sandbox:
+        condition: service_started
+    networks:
+      - aiditor-network
+
+  python-sandbox:
+    <<: *common-config
+    build:
+      context: .
+      dockerfile: Dockerfile.python-sandbox
+    image: python-sandbox:latest
+    container_name: python-sandbox
+    env_file:
+      - .env
+    command: >
+      sh -c "
+      gcloud auth activate-service-account --key-file=$$GOOGLE_APPLICATION_CREDENTIALS &&
+      echo 'Sandbox authenticated and ready.' &&
+      tail -f /dev/null
+      "
+    volumes:
+      # Mount GCP credentials file for Vertex AI authentication in sandbox
+      - ./gcp-credentials.json:/workdir/gcp-credentials.json:ro
+    networks:
+      - aiditor-network
+
+  redis:
+    image: redis:alpine
+    container_name: aiditor-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - aiditor-network
+
+volumes:
+  redis_data:
+    name: aiditor-redis-data
+
+networks:
+  aiditor-network:
+    driver: bridge

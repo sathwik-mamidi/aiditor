@@ -1,0 +1,55 @@
+# Git and version control
+.git
+.gitignore
+*.git
+
+# Environment files (will be mounted via docker-compose)
+.env
+.env.*
+
+# Credentials (will be mounted via docker-compose, not copied)
+gcp-credentials.json
+*.json
+
+# Documentation
+README.md
+*.md
+
+# Cache and temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+htmlcov/
+.pytest_cache/
+.cache
+.mypy_cache
+.dmypy.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Local development files
+*.log
+*.sqlite
+*.db

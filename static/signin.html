@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Aiditor</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="static/signin.css">
+  <script>
+    !function (t, e) { var o, n, p, r; e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init bs ws ge fs capture De calculateEventProperties $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "), n = 0; n < o.length; n++)g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+    posthog.init('phc_uwnQVzcvPhfMOMqxj8a4sdm7SQwGsYRzQ1chPj7lW7V', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only',
+    })
+  </script>
+</head>
+
+<body>
+  <div class="page-container">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <a href="/" class="logo">
+            <span class="gradient-text">Aiditor</span>
+          </a>
+        </div>
+        <div class="header-right">
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="signin-container">
+        <div class="signin-header">
+          <h2 class="signin-title">Sign in to your account</h2>
+          <p class="signin-subtitle">
+            Or <a href="/signup" class="signin-link">create a new account</a>
+          </p>
+        </div>
+
+        <div class="signin-form-container">
+          <button onclick="window.location.href='/auth/google'" class="google-signin-btn">
+            <span class="google-signin-content">
+              <svg class="google-icon" viewBox="0 0 24 24">
+                <path fill="#4285F4"
+                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853"
+                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05"
+                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                <path fill="#EA4335"
+                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              </svg>
+              Continue with Google
+            </span>
+          </button>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-text">
+              <span>Or continue with email</span>
+            </div>
+          </div>
+
+          <form id="signin-form" class="signin-form">
+            <div class="form-fields">
+              <div class="form-field">
+                <label for="email" class="sr-only">Email address</label>
+                <input id="email" name="username" type="email" autocomplete="email" required class="form-input"
+                  placeholder="Email address">
+              </div>
+              <div class="form-field">
+                <label for="password" class="sr-only">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required
+                  class="form-input" placeholder="Password">
+              </div>
+            </div>
+
+            <button type="submit" id="signin-button" class="submit-btn">
+              <span id="signin-text">Sign in</span>
+              <svg id="signin-spinner" class="spinner" style="display:none;" xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24">
+                <circle class="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+              </svg>
+            </button>
+
+            <div class="forgot-password-container">
+              <a href="/forgot-password" class="forgot-password-link">
+                Forgot your password?
+              </a>
+            </div>
+
+            <div id="error-message" class="error-message" style="display: none;"></div>
+          </form>
+        </div>
+
+        <div class="terms-notice">
+          By signing in, you agree to our
+          <a href="/terms" class="terms-link">Terms of Use</a> and
+          <a href="/privacy" class="terms-link">Privacy Policy</a>.
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-main">
+          <div class="footer-links">
+            <a href="/privacy" class="footer-link">Privacy</a>
+            <span class="footer-separator">•</span>
+            <a href="/terms" class="footer-link">Terms</a>
+          </div>
+          <p class="footer-copyright">© 2025 Aiditor. The future of content creation.</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Fixed theme toggle in bottom right corner -->
+  <button class="theme-toggle-fixed" id="themeToggle" aria-label="Toggle dark mode">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      class="icon">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  </button>
+
+  <div id="cookieConsentBanner" class="cookie-banner hidden">
+    <div class="cookie-content">
+      <p class="cookie-text">
+        We use cookies to enhance your experience and for analytics. By continuing to visit this site you agree to our
+        use of cookies.
+        <a href="/privacy" class="cookie-link">Learn more in our Privacy Policy</a>.
+      </p>
+      <button id="acceptCookieConsent" class="cookie-button">
+        Accept
+      </button>
+    </div>
+  </div>
+
+  <script src="static/signin.js"></script>
+</body>
+
+</html>

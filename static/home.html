@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aiditor — One conversation replaces your creative suite (archived build)</title>
+  <meta name="description" content="Aiditor is a solo-built AI editor that turns raw video, photos, and audio into finished content from one conversation. This build is archived — watch the demo.">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="static/home.css">
+  <script>
+    !function (t, e) { var o, n, p, r; e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init bs ws ge fs capture De calculateEventProperties $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "), n = 0; n < o.length; n++)g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+    posthog.init('phc_uwnQVzcvPhfMOMqxj8a4sdm7SQwGsYRzQ1chPj7lW7V', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only',
+    })
+  </script>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content container">
+        <div class="header-left">
+          <a href="/" class="logo">Aiditor</a>
+        </div>
+
+        <div class="header-right">
+          <nav class="header-nav">
+            <a href="#how" class="nav-link">How it works</a>
+            <a href="#capabilities" class="nav-link">Capabilities</a>
+            <a href="#pricing" class="nav-link">Pricing</a>
+          </nav>
+          <div class="auth-buttons">
+            <span class="status-badge status-badge--tally">
+              <span class="status-dot"></span> Offline
+            </span>
+          </div>
+          <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8"
+              stroke="currentColor" style="width:1.5rem;height:1.5rem;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- Hero -->
+      <section class="hero container">
+        <div class="hero-top">
+          <span class="eyebrow">Archived build · sign-ups closed</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="accent-italic">One chat</span> replaces your entire creative suite.
+        </h1>
+        <p class="hero-description">
+          Upload raw video, photos, or audio. Describe the result in plain language. Aiditor writes the code
+          and renders it — no timelines to learn, no plugins to install.
+        </p>
+
+        <div class="hero-actions">
+          <div class="hero-buttons">
+            <button onclick="openDemoModal()" class="btn btn-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="icon">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <span>Watch the 2-minute demo</span>
+            </button>
+            <button class="btn btn-ghost signup-cta">
+              <span>Try it</span>
+            </button>
+          </div>
+          <p class="hero-note">No new accounts are being created right now — the demo still plays in full.</p>
+        </div>
+
+        <div class="hero-stack">
+          <span class="hero-stack-label">Built to replace</span>
+          <div class="tool-chips">
+            <span class="tool-chip">Photoshop</span>
+            <span class="tool-chip">Premiere Pro</span>
+            <span class="tool-chip">After Effects</span>
+            <span class="tool-chip">Audition</span>
+            <span class="tool-chip">Final Cut</span>
+            <span class="tool-chip">DaVinci Resolve</span>
+            <span class="tool-chip">Canva</span>
+            <span class="tool-chip">Midjourney</span>
+          </div>
+        </div>
+
+        <p class="powered-by">Built on Google's Gemini, Imagen 3, Veo 2, and Lyria 2</p>
+
+        <div class="ruler" aria-hidden="true">
+          <div class="ruler-playhead"></div>
+          <div class="ruler-track">
+            <div class="ruler-tick"><span>00:00</span><strong>Upload</strong></div>
+            <div class="ruler-tick"><span>00:10</span><strong>Describe</strong></div>
+            <div class="ruler-tick"><span>00:20</span><strong>Render</strong></div>
+            <div class="ruler-tick"><span>00:30</span><strong>Export</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem / Solution -->
+      <section class="section" id="how">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">The old way</span>
+            <h2 class="section-title">Why one conversation instead of four apps</h2>
+          </div>
+          <div class="problem-grid">
+            <div class="card problem-card">
+              <span class="problem-mark">01</span>
+              <h3>$600–$1,000/yr before you've made anything</h3>
+              <p>Creative Cloud, plus the plugins and templates everyone ends up buying anyway.</p>
+            </div>
+            <div class="card problem-card">
+              <span class="problem-mark">02</span>
+              <h3>Dozens of hours to get fluent</h3>
+              <p>Keyboard shortcuts, panels, render settings — a real learning curve before you're fast.</p>
+            </div>
+            <div class="card problem-card">
+              <span class="problem-mark">03</span>
+              <h3>Four apps, one project</h3>
+              <p>Cut in Premiere, grade in DaVinci, animate in After Effects, mix in Audition. Export, reimport,
+                repeat.</p>
+            </div>
+          </div>
+          <div class="solution-banner">
+            <h3>Aiditor collapses the stack into one conversation.</h3>
+            <p>Upload once. Describe the edit. It writes the code, runs it, and hands back the file — stills,
+              video, or audio.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Demo -->
+      <section class="section section-tint" id="demo">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">Inside a session</span>
+            <h2 class="section-title">What a session actually looks like</h2>
+          </div>
+          <div class="demo-examples">
+            <div class="card demo-card">
+              <div class="demo-header">
+                <span class="demo-tag">Example · Product video</span>
+                <span class="demo-time">~2 min</span>
+              </div>
+              <div class="message user">"I need a product demo video like Apple's iPhone ads. Here's my footage
+                and a reference clip."</div>
+              <div class="message ai">"Sleek showcase, minimal background, dynamic camera moves, Apple-style
+                transitions. Processing now."</div>
+              <div class="demo-result"><span class="result-label">Result —</span>Cinematic product video with
+                polished timing and grade, ready to export.</div>
+            </div>
+
+            <div class="card demo-card">
+              <div class="demo-header">
+                <span class="demo-tag">Example · Social ad</span>
+                <span class="demo-time">~5 min</span>
+              </div>
+              <div class="message user">"30-second Instagram ad. Our brand colors, energetic music, logo
+                animation, needs to stop the scroll."</div>
+              <div class="message ai">"High-energy cut with quick transitions and motion graphics, matched to
+                your brand kit and trending audio."</div>
+              <div class="demo-result"><span class="result-label">Result —</span>Scroll-stopping ad, exported
+                in every aspect ratio you need.</div>
+            </div>
+
+            <div class="card demo-card">
+              <div class="demo-header">
+                <span class="demo-tag">Example · Stream highlights</span>
+                <span class="demo-time">~3 min</span>
+              </div>
+              <div class="message user">"Turn my 2-hour stream into a 60-second highlight reel — hype music,
+                zoom on kills, meme reactions."</div>
+              <div class="message ai">"Scanning for peak moments, then cutting a fast-paced montage with
+                beat-synced zooms and captions."</div>
+              <div class="demo-result"><span class="result-label">Result —</span>A highlight reel ready to
+                post, no manual scrubbing required.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Capabilities -->
+      <section class="section" id="capabilities">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">Under the hood</span>
+            <h2 class="section-title">One engine, every medium</h2>
+            <p class="section-subtitle">Everything a creative suite does, spoken instead of clicked.</p>
+          </div>
+
+          <div class="capabilities-grid">
+            <div class="card capability-card">
+              <h3><span class="capability-index">01</span> Video</h3>
+              <ul class="capability-list">
+                <li>Reference-based edits — "cut it like this clip"</li>
+                <li>Scene detection and smart cutting</li>
+                <li>Auto color grading and stabilization</li>
+                <li>Dynamic captions and subtitles</li>
+                <li>Green-screen and VFX without After Effects</li>
+              </ul>
+            </div>
+
+            <div class="card capability-card">
+              <h3><span class="capability-index">02</span> Audio</h3>
+              <ul class="capability-list">
+                <li>Voice cloning and dubbing</li>
+                <li>Generative background scores</li>
+                <li>Podcast cleanup and leveling</li>
+                <li>Multi-language translation</li>
+                <li>Mixing and mastering</li>
+              </ul>
+            </div>
+
+            <div class="card capability-card">
+              <h3><span class="capability-index">03</span> Visual</h3>
+              <ul class="capability-list">
+                <li>AI image generation and edits</li>
+                <li>Background removal and replacement</li>
+                <li>Batch processing for catalogs</li>
+                <li>Social templates sized per platform</li>
+                <li>Logo animation and motion graphics</li>
+              </ul>
+            </div>
+
+            <div class="card capability-card">
+              <h3><span class="capability-index">04</span> AI</h3>
+              <ul class="capability-list">
+                <li>Understands footage via Gemini</li>
+                <li>Photoreal stills via Imagen 3</li>
+                <li>Generated video via Veo 2</li>
+                <li>Original scores via Lyria 2</li>
+                <li>Learns your editing style over a session</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Use cases -->
+      <section class="section section-tint" id="who">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">Who it's for</span>
+            <h2 class="section-title">Built for people who ship</h2>
+          </div>
+          <div class="use-cases-grid">
+            <div class="card use-case">
+              <div class="use-case-header">
+                <span class="use-case-icon">📹</span>
+                <h3>YouTubers &amp; streamers</h3>
+              </div>
+              <p>"Turn my 4-hour stream into a 10-minute video with highlights, intro, outro, and thumbnail."</p>
+              <span class="use-case-time">~5 min</span>
+            </div>
+
+            <div class="card use-case">
+              <div class="use-case-header">
+                <span class="use-case-icon">🏢</span>
+                <h3>Marketing agencies</h3>
+              </div>
+              <p>"Create 20 variations of this ad for different platforms. Keep brand consistency."</p>
+              <span class="use-case-time">~10 min</span>
+            </div>
+
+            <div class="card use-case">
+              <div class="use-case-header">
+                <span class="use-case-icon">🛍️</span>
+                <h3>E-commerce brands</h3>
+              </div>
+              <p>"Remove backgrounds from 500 product photos and create lifestyle shots with AI models."</p>
+              <span class="use-case-time">~15 min</span>
+            </div>
+
+            <div class="card use-case">
+              <div class="use-case-header">
+                <span class="use-case-icon">🎓</span>
+                <h3>Educators &amp; coaches</h3>
+              </div>
+              <p>"Turn my course recording into bite-sized lessons with graphics, quizzes, and subtitles."</p>
+              <span class="use-case-time">~20 min</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section class="section" id="pricing">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">As designed</span>
+            <h2 class="section-title">What it cost to run</h2>
+            <p class="section-subtitle">Free and Pro existed before this build was archived — kept here for
+              reference.</p>
+          </div>
+
+          <div class="pricing-comparison">
+            <div class="comparison-card">
+              <h4>Traditional stack</h4>
+              <ul class="comparison-list">
+                <li class="comparison-item negative"><span>Creative Cloud — $600/year</span></li>
+                <li class="comparison-item negative"><span>Plugins &amp; templates — $200/month</span></li>
+                <li class="comparison-item negative"><span>Freelance editor — $50–200/hour</span></li>
+                <li class="comparison-item negative"><span>Learning time — 100+ hours</span></li>
+              </ul>
+              <div class="comparison-total">$10,000+/year</div>
+            </div>
+
+            <div class="comparison-arrow">→</div>
+
+            <div class="comparison-card highlight">
+              <h4>The Aiditor way</h4>
+              <ul class="comparison-list">
+                <li class="comparison-item positive"><span>Everything included</span></li>
+                <li class="comparison-item positive"><span>No learning curve</span></li>
+                <li class="comparison-item positive"><span>Instant results</span></li>
+                <li class="comparison-item positive"><span>One subscription</span></li>
+              </ul>
+              <div class="comparison-total">From $0/month</div>
+            </div>
+          </div>
+
+          <div class="pricing-grid">
+            <div class="card pricing-card">
+              <div class="pricing-header">
+                <h3 class="pricing-title">Free</h3>
+                <div class="pricing-price">$0</div>
+                <p class="pricing-subtitle">Enough to see if it fits how you work</p>
+              </div>
+              <ul class="pricing-features">
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>100 credits a month</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Natural-language photo and video edits</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Runs entirely in the browser</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Standard-resolution exports</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Cancel anytime</span></li>
+              </ul>
+              <button class="btn btn-block btn-disabled-look signup-cta">Currently unavailable</button>
+            </div>
+
+            <div class="card pricing-card pricing-card-popular">
+              <div class="popular-badge">Most requested</div>
+              <div class="pricing-header">
+                <h3 class="pricing-title">Pro</h3>
+                <div class="pricing-price">$20<span class="pricing-period">/month</span></div>
+                <p class="pricing-subtitle">For a full production workload</p>
+              </div>
+              <ul class="pricing-features">
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>2,000 credits — around 400 edits</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>4K/8K exports</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Voice cloning and music generation</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Bulk edits for catalogs and batches</span></li>
+                <li class="pricing-feature"><svg class="check-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
+                  </svg><span>Priority support</span></li>
+              </ul>
+              <button class="btn btn-block btn-disabled-look signup-cta">Currently unavailable</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About / built solo -->
+      <section class="section section-tint" id="about">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">The credits</span>
+            <h2 class="section-title">Built solo, not by a team.</h2>
+          </div>
+          <p class="about-body">
+            Aiditor was designed, built, and shipped by one person — from the chat interface down to the
+            video-rendering pipeline — orchestrating Google's Gemini, Imagen 3, Veo 2, and Lyria 2 behind a
+            single conversation. The product is archived now, but the demo is the real thing.
+          </p>
+          <div class="about-stats">
+            <div class="about-stat">
+              <span class="about-stat-number">1</span>
+              <span class="about-stat-label">Person</span>
+            </div>
+            <div class="about-stat">
+              <span class="about-stat-number">4</span>
+              <span class="about-stat-label">AI models orchestrated</span>
+            </div>
+            <div class="about-stat">
+              <span class="about-stat-number">0</span>
+              <span class="about-stat-label">Accepting sign-ups</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Final CTA -->
+      <section class="section">
+        <div class="container">
+          <div class="cta-section">
+            <h2 class="cta-title">See it before you take my word for it.</h2>
+            <p class="cta-description">No account needed to watch. Two minutes, real interface, real output.</p>
+            <div class="cta-buttons">
+              <button onclick="openDemoModal()" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="icon">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span>Watch the demo</span>
+              </button>
+              <a href="https://github.com/sathwik-mamidi/aiditor" target="_blank" rel="noopener" class="btn btn-ghost">View the source</a>
+            </div>
+            <p class="cta-note">Archived build · sign-ups closed · demo always on</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="section" id="faq">
+        <div class="container">
+          <div class="section-head">
+            <span class="eyebrow section-eyebrow">FAQ</span>
+            <h2 class="section-title">Questions, answered straight</h2>
+          </div>
+          <div class="faq-grid">
+            <div class="card faq-item">
+              <h4 class="faq-question">Can I sign up right now?</h4>
+              <p class="faq-answer">Not at the moment. This build is archived and isn't creating new accounts —
+                the demo above shows exactly what the product does.</p>
+            </div>
+            <div class="card faq-item">
+              <h4 class="faq-question">Do I need any other editing software?</h4>
+              <p class="faq-answer">No. Aiditor runs in the browser — you upload files, describe the edit, and
+                it renders the result.</p>
+            </div>
+            <div class="card faq-item">
+              <h4 class="faq-question">Can it use my existing Premiere or Photoshop files?</h4>
+              <p class="faq-answer">Yes. Aiditor reads project files from Premiere, Final Cut, and Photoshop and
+                can continue from where you left off.</p>
+            </div>
+            <div class="card faq-item">
+              <h4 class="faq-question">What if I need something really specific?</h4>
+              <p class="faq-answer">That's the point — it writes custom code for the exact edit you describe,
+                instead of relying on a fixed set of presets.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-top">
+          <span class="footer-brand">Aiditor</span>
+          <span class="status-badge status-badge--tally">
+            <span class="status-dot"></span> Offline — archived build
+          </span>
+        </div>
+        <div class="footer-bottom">
+          <div class="footer-links">
+            <a href="/privacy" class="footer-link">Privacy</a>
+            <a href="/terms" class="footer-link">Terms</a>
+            <a href="https://github.com/sathwik-mamidi/aiditor" target="_blank" rel="noopener" class="footer-link">Source</a>
+          </div>
+          <p class="footer-credit">
+            © 2025–2026 Aiditor. Built by
+            <a href="https://sathwikmamidi.com" target="_blank" rel="noopener">Sathwik Mamidi</a>
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-banner hidden">
+    <div class="cookie-content">
+      <p class="cookie-text">
+        We use cookies to enhance your experience and for analytics. By continuing to visit this site you agree to our
+        use of cookies.
+        <a href="/privacy" class="cookie-link">Learn more in our Privacy Policy</a>.
+      </p>
+      <button id="acceptCookieConsent" class="cookie-button">
+        Accept
+      </button>
+    </div>
+  </div>
+
+  <script src="static/home.js"></script>
+
+  <!-- Slide-in mobile navigation -->
+  <nav class="mobile-nav hidden" id="mobileNav">
+    <a href="#how" class="mobile-nav-link">How it works</a>
+    <a href="#capabilities" class="mobile-nav-link">Capabilities</a>
+    <a href="#pricing" class="mobile-nav-link">Pricing</a>
+    <span class="status-badge status-badge--tally">
+      <span class="status-dot"></span> Offline
+    </span>
+    <button onclick="openDemoModal()" class="btn btn-primary mobile-signin">Watch demo</button>
+  </nav>
+
+  <!-- Demo Video Modal -->
+  <div id="demoModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" role="button" tabindex="0" aria-label="Close demo video">&times;</span>
+      <h2>Watch the demo</h2>
+      <div class="video-container">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/hVKREOYiCJk" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

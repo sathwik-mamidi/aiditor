@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Debug - Aiditor</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="static/admin.css">
+  <script>
+    !function (t, e) { var o, n, p, r; e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) { function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]), t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } } (p = t.createElement("script")).type = "text/javascript", p.crossOrigin = "anonymous", p.async = !0, p.src = s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") + "/static/array.js", (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r); var u = e; for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], u.toString = function (t) { var e = "posthog"; return "posthog" !== a && (e += "." + a), t || (e += " (stub)"), e }, u.people.toString = function () { return u.toString(1) + ".people (stub)" }, o = "init bs ws ge fs capture De calculateEventProperties $s register register_once register_for_session unregister unregister_for_session Is getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey canRenderSurveyAsync identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty xs Ss createPersonProfile Es gs opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing ys debug ks getPageViewId captureTraceFeedback captureTraceMetric".split(" "), n = 0; n < o.length; n++)g(u, o[n]); e._i.push([i, s, a]) }, e.__SV = 1) }(document, window.posthog || []);
+    posthog.init('phc_uwnQVzcvPhfMOMqxj8a4sdm7SQwGsYRzQ1chPj7lW7V', {
+      api_host: 'https://us.i.posthog.com',
+      person_profiles: 'identified_only', // or 'always' to create profiles for anonymous users as well
+    })
+  </script>
+</head>
+
+<body>
+  <div id="app-container" class="app-container">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <a href="/admin" class="header-title">Aiditor DEBUG</a>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <span id="targetUserPlanCredits" class="user-info-text">Target User: N/A</span>
+          </div>
+          <button id="logoutBtn" class="header-btn">
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="search-section">
+      <form id="userSearchForm" class="search-form">
+        <input type="email" id="userEmailInput" placeholder="Enter User Email" required class="search-input">
+        <button type="submit" class="search-btn">Search User</button>
+      </form>
+      <div id="adminErrorContainer" class="error-container hidden">
+      </div>
+    </div>
+
+    <div class="main-layout">
+      <aside id="debugSidebar" class="sidebar">
+        <h2 class="sidebar-title">User Chats</h2>
+        <ul id="debugChatHistory" class="chat-list">
+          <li class="chat-item-placeholder">Search for a user to see their chats.</li>
+        </ul>
+      </aside>
+
+      <main id="debugMainContent" class="main-content">
+        <div id="debugMessagesContainer" class="messages-container">
+          <p class="messages-placeholder">Select a chat to view its history.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="fileViewerModal" class="file-modal hidden">
+    <div class="file-modal-content">
+      <div class="file-modal-header">
+        <h3 id="fileModalTitle" class="file-modal-title">File Viewer</h3>
+        <button id="closeFileModalBtn" class="file-modal-close">
+          <svg class="close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="fileModalContent" class="file-modal-body">
+        <p class="file-loading">Loading file...</p>
+      </div>
+      <div class="file-modal-footer">
+        <a id="fileModalDownloadBtn" href="#" target="_blank" download class="download-btn hidden">
+          Download File
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed theme toggle in bottom right corner -->
+  <button class="theme-toggle-fixed" id="themeToggle" aria-label="Toggle dark mode">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      class="icon">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+    </svg>
+  </button>
+
+  <!-- Cookie Consent Banner -->
+  <div id="cookieConsentBanner" class="cookie-banner hidden">
+    <div class="cookie-content">
+      <p class="cookie-text">
+        We use cookies to enhance your experience and for analytics. By continuing to visit this site you agree to our
+        use of cookies.
+        <a href="/privacy" class="cookie-link">Learn more in our Privacy Policy</a>.
+      </p>
+      <button id="acceptCookieConsent" class="cookie-button">
+        Accept
+      </button>
+    </div>
+  </div>
+
+  <script src="static/admin.js" defer></script>
+</body>
+
+</html>
